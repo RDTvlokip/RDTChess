@@ -1,0 +1,9 @@
+# Les poids vivent sur Hugging Face, pas ici: 44 Mo n ont rien a faire dans
+# l historique d un depot de code, et HF est fait pour ca.
+#   curl -L -o RDTChess.pt https://huggingface.co/RDTvlokip/RDTChess/resolve/main/RDTChess.pt
+*.pt
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
