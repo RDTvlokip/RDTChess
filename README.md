@@ -254,7 +254,7 @@ Apache-2.0. See [LICENSE](LICENSE).
 
 **Théo CHARLET**
 
-TSSR Graduate (IT Systems & Networks Technician) — AI/ML Specialization
+TSSR Graduate (IT Systems & Networks Technician) — AI/ML Specialization<br>
 Creator of AG-BPE (Attention-Guided Byte-Pair Encoding)
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0a66c2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/théo-charlet)
