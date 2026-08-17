@@ -95,6 +95,62 @@ print(board.san(moves[int(probs.argmax())]), float(value))
 
 ---
 
+## Reproduce the measurements
+
+The three tools that produced every number on this page are here. They are the
+methodological part of the project, and the part worth reusing.
+
+### The puzzle grid
+
+```bash
+curl -L -O https://database.lichess.org/lichess_db_puzzle.csv.zst   # 290 MB
+pip install zstandard
+python puzzles.py RDTChess.pt
+```
+
+23,845 puzzles sampled **per cell of (solution length × rating band)**, because
+the two are confounded: a mate-in-3 is rated higher than a mate-in-1, so
+"accuracy falls with length" would otherwise just restate "hard puzzles are
+hard".
+
+Lines are **forced**: the network is queried at every move of the solution even
+after it has already erred. Without that, accuracy at move *k* would only be
+measured on puzzles whose first *k−1* moves were already found — a sample sorted
+by construction, where "the network composes" cannot be told apart from "the
+surviving puzzles were the easy ones".
+
+The first run writes its sample to `logs/puzzle_sample.csv` and every later run
+reuses it, so two models are compared on the same positions and the test is
+paired.
+
+### Against the minimax
+
+```bash
+python versus.py RDTChess.pt --games 300 --depth 2
+```
+
+Judge on **depth 2**. Depth 1 saturates for a trained model: the same network
+scored 88.7 % against depth 1 and 59.5 % against depth 2, twenty-nine points
+apart for one model. It prints the standard error, because a two-point gap on
+300 games is not measurable.
+
+### Model against model
+
+```bash
+python round_robin.py 300 RDTChess.pt other.pt
+```
+
+Two greedy networks are two deterministic functions: from the initial position
+they replay **the same game** forever. So 8 random legal plies are drawn before
+handing control back, and each opening is played in **both colour directions** —
+otherwise you compare two different samples and the first-move advantage
+(measured at 52.8 % over 3600 games) mixes with the luck of the draw.
+
+Sanity check that the pairing is symmetric: run a model against a copy of
+itself and the score is exactly 50.0 %.
+
+---
+
 ## Identity
 
 | | |
@@ -229,6 +285,9 @@ The quiet move goes from the **easiest** category to the **hardest** — 23 poin
 | `gui.py`, `play.py` | the browser board |
 | `uci.py` | UCI engine, for lichess-bot and chess GUIs |
 | `predict.py` | one-position example |
+| `puzzles.py` | the puzzle grid, sampled by cell and paired across models |
+| `versus.py` | score against the minimax, with its standard error |
+| `round_robin.py` | model against model, paired random openings |
 
 **Inference only.** The training code is not part of this repository; the recipe above is complete enough to reproduce it.
 

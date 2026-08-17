@@ -1,3 +1,4 @@
 torch>=2.0
 python-chess>=1.999
 numpy>=1.24
+zstandard>=0.22
