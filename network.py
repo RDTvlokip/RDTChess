@@ -4,6 +4,7 @@ Inference-only definition, matching the released checkpoint exactly. Nothing
 here trains; see the model card for how the weights were produced.
 """
 
+import os
 from typing import Tuple
 
 import torch
@@ -79,7 +80,20 @@ class ChessNetwork(nn.Module):
 
     @classmethod
     def from_checkpoint(cls, path: str, device: str = "cpu") -> "ChessNetwork":
-        """Rebuild the network with the architecture stored in the checkpoint."""
+        """Rebuild the network with the architecture stored in the checkpoint.
+
+        Every entry point in this repository goes through here, which is why the
+        missing-weights message lives here rather than in each script: cloning
+        the code does not bring the weights, they are hosted on the Hub, and
+        torch's own FileNotFoundError does not say so.
+        """
+        if not os.path.isfile(path):
+            raise SystemExit(
+                f"No weights at {path}\n\n"
+                "The weights are not in this repository -- 44 MB does not belong in a\n"
+                "code repo's history. Download them once:\n\n"
+                "  curl -L -O https://huggingface.co/RDTvlokip/RDTChess/resolve/main/RDTChess.pt\n"
+            )
         checkpoint = torch.load(path, map_location="cpu")
         model = cls(**checkpoint["network_config"])
         model.load_state_dict(checkpoint["network"])
