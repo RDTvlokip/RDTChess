@@ -1,6 +1,6 @@
 """RDTChess as a UCI engine, to plug into `lichess-bot`.
 
-    python uci.py --model RDTChess.pt
+    python uci.py --model RDTChess2.pt
 
 UCI assumes an engine that *searches*: it gets a time budget, thinks, and
 answers when it is done. There is no search here — one forward pass and the
@@ -22,11 +22,12 @@ operator, not the beginning of a search engine.
 
 import argparse
 import math
+import os
 import sys
 
 import chess
 
-DEFAULT_MODEL = "RDTChess.pt"
+DEFAULT_MODEL = "RDTChess2.pt"
 
 
 def say(line: str) -> None:
@@ -160,7 +161,12 @@ def main() -> int:
         command = tokens[0]
 
         if command == "uci":
-            say("id name RDTChess 128x8 5.5M")
+            # Derived from the loaded checkpoint's filename rather than hardcoded,
+            # so the label stays correct without editing this file every time the
+            # deployed model changes -- and it costs nothing at handshake time,
+            # the checkpoint itself is loaded lazily on the first "position".
+            model_name = os.path.splitext(os.path.basename(session.model_path))[0]
+            say(f"id name {model_name} 128x8")
             say("id author Theo CHARLET")
             say(f"option name FinishPlies type spin default {session.finish_plies} min 0 max 2")
             say(f"option name Threads type spin default {session.threads} min 1 max 32")
