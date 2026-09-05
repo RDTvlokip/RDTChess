@@ -81,6 +81,14 @@ That is the whole method. No self-play, no MCTS, no distillation from an engine,
 
 > 🚫 **No absolute Elo is claimed.** This model has never been played against a rated pool. Every figure here is a *difference* measured inside one family of models, on one training seed.
 
+**Actual scores against Maia** (CSSLab's human-imitating engine, `nodes=1`, no search either side), on the final checkpoint — one training seed (123):
+
+| Opponent | RDTChess2.pt | Plain architecture |
+|---|---|---|
+| Maia-1100 | **78.5 %** | 77.3 % |
+| Maia-1500 | **69.7 %** | 68.8 % |
+| Maia-1900 | **60.5 %** | 55.8 % |
+
 **Read this precisely, not optimistically.** Puzzles, Maia, and the round-robin all judge in **one pass, no search** — the same regime this model is actually deployed in — and all three are stable and one-sided across every slice tested. Minimax is a stress test against an opponent that searches for a refutation; the mechanism never collapses against it, but the signal is too noisy at n=300 to claim it wins there either. On the 5 hand-picked positions where the production model actually lost a real game, both architectures bounce between fixing and re-breaking the same handful of positions slice to slice — until, on the very last slice, both converged on choosing the exact identical move on all 6 tested, the first time that happened.
 
 This was confirmed on **one seed (123) only**, extended sequentially across 8 slices of the same data with `--resume`. The 1.38M-game starting point was separately confirmed on three independent seeds (24, 123, 454) before this single-seed extension began; the extension itself has not been repeated on another seed.
