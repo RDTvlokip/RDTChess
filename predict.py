@@ -13,6 +13,13 @@ The three steps that matter, and the order they go in:
 3. softmax over that short list, not over the 4096.
 
 Skipping step 2 is the usual way to get nonsense out of this model.
+
+With RDTChess3.pt (the default), the script then shows what the full player
+does: when the top move is under 60 %, it imagines its three best moves in
+latent space and judges them with its own value head (`imagination.py`).
+
+    python predict.py "FEN ..." RDTChess2.pt   # any checkpoint, as 2nd argument
+    python predict.py "" RDTChess.pt           # "" = initial position
 """
 
 import sys
@@ -24,7 +31,7 @@ import torch
 from encoding import board_to_planes, legal_move_indices
 from network import ChessNetwork
 
-CHECKPOINT = "RDTChess.pt"
+CHECKPOINT = "RDTChess3.pt"
 
 
 @torch.no_grad()
@@ -47,9 +54,10 @@ def evaluate(model: ChessNetwork, board: chess.Board, device: str = "cpu"):
 
 
 def main() -> int:
-    board = chess.Board(sys.argv[1]) if len(sys.argv) > 1 else chess.Board()
+    board = chess.Board(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1] else chess.Board()
+    path = sys.argv[2] if len(sys.argv) > 2 else CHECKPOINT
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = ChessNetwork.from_checkpoint(CHECKPOINT, device=device)
+    model = ChessNetwork.from_checkpoint(path, device=device)
 
     moves, probabilities, value = evaluate(model, board, device)
     if not moves:
@@ -64,7 +72,17 @@ def main() -> int:
     for rank in order[:5]:
         print(f"  {board.san(moves[rank]):8s} {probabilities[rank] * 100:5.1f} %")
 
-    print(f"\nplayed: {board.san(moves[order[0]])}")
+    print(f"\npolicy alone plays: {board.san(moves[order[0]])}")
+
+    if "imagination" in torch.load(path, map_location="cpu"):
+        from engine import ChessEngine
+        from imagination import ImaginationPlayer
+
+        player = ImaginationPlayer(path, device=device, finish_plies=1)
+        move = player.get_move(ChessEngine(board.copy()))
+        how = (f"imagined its {player.last_imagined} best moves" if player.last_imagined
+               else "policy sure enough, no imagination")
+        print(f"RDTChess3 plays:    {board.san(move)}   ({how})")
     return 0
 
 

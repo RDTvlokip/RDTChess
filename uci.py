@@ -1,10 +1,13 @@
 """RDTChess as a UCI engine, to plug into `lichess-bot`.
 
-    python uci.py --model RDTChess2.pt
+    python uci.py --model RDTChess3.pt      (or RDTChess2.pt, RDTChess.pt)
 
 UCI assumes an engine that *searches*: it gets a time budget, thinks, and
 answers when it is done. There is no search here — one forward pass and the
-move is out, in about 7 ms on two CPU threads. Every `go` parameter (wtime,
+move is out, in about 7 ms on two CPU threads for RDTChess2. RDTChess3 adds,
+only when the policy hesitates, a one-ply comparison of three candidate moves
+imagined in latent space (`imagination.py`): about 25 ms per move on two CPU
+threads. Every `go` parameter (wtime,
 btime, depth, movetime) is therefore parsed and ignored: the move does not
 depend on the time available, and the clock cannot run out.
 
@@ -27,7 +30,8 @@ import sys
 
 import chess
 
-DEFAULT_MODEL = "RDTChess2.pt"
+# lichess-bot starts this script without arguments, so this default is the deployed model.
+DEFAULT_MODEL = "RDTChess3.pt"
 
 
 def say(line: str) -> None:
@@ -80,7 +84,14 @@ class Session:
         torch.set_num_threads(max(1, self.threads))
         from player import ModelPlayer
 
-        self.player = ModelPlayer(
+        # RDTChess3 checkpoints also carry the look-ahead module g and its rule;
+        # older checkpoints (RDTChess, RDTChess2) load the plain policy player.
+        checkpoint = torch.load(self.model_path, map_location="cpu") if os.path.isfile(self.model_path) else {}
+        if "imagination" in checkpoint:
+            from imagination import ImaginationPlayer as Player
+        else:
+            Player = ModelPlayer
+        self.player = Player(
             self.model_path, device=self.device, finish_plies=self.finish_plies
         )
 
@@ -139,9 +150,11 @@ class Session:
         score = "mate 1" if probe.is_checkmate() else f"cp {to_centipawns(value)}"
 
         confidence = float(max(probabilities)) if len(probabilities) else 0.0
+        imagined = getattr(self.player, "last_imagined", 0)
+        detail = f"imagined {imagined} moves" if imagined else "instinct"
         say(
             f"info depth 1 nodes 1 score {score} "
-            f"string policy {confidence * 100:.1f}% over {len(moves)} legal moves "
+            f"string policy {confidence * 100:.1f}% over {len(moves)} legal moves, {detail} "
             f"pv {move.uci()}"
         )
         say(f"bestmove {move.uci()}")

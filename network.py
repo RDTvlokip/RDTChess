@@ -144,9 +144,12 @@ class ChessNetwork(nn.Module):
                 x = candidate
         return x
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        x = self.trunk(x)
+    def heads(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Policy logits and value read from a latent state.
 
+        Split from `forward` so RDTChess3 can read the value of an *imagined*
+        latent state with the very same heads (see `imagination.py`).
+        """
         p = F.relu(self.policy_bn(self.policy_conv(x)))
         policy_logits = self.policy_fc(p.flatten(1))
 
@@ -155,6 +158,9 @@ class ChessNetwork(nn.Module):
         value = torch.tanh(self.value_fc2(v))
 
         return policy_logits, value
+
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        return self.heads(self.trunk(x))
 
     @classmethod
     def from_checkpoint(cls, path: str, device: str = "cpu") -> "ChessNetwork":
@@ -170,8 +176,9 @@ class ChessNetwork(nn.Module):
                 f"No weights at {path}\n\n"
                 "The weights are not in this repository -- they do not belong in a\n"
                 "code repo's history. Download the one you want, e.g.:\n\n"
-                "  curl -L -O https://huggingface.co/RDTvlokip/RDTChess/resolve/main/RDTChess.pt\n"
+                "  curl -L -O https://huggingface.co/RDTvlokip/RDTChess/resolve/main/RDTChess3.pt\n"
                 "  curl -L -O https://huggingface.co/RDTvlokip/RDTChess/resolve/main/RDTChess2.pt\n"
+                "  curl -L -O https://huggingface.co/RDTvlokip/RDTChess/resolve/main/RDTChess.pt\n"
             )
         checkpoint = torch.load(path, map_location="cpu")
         model = cls(**checkpoint["network_config"])

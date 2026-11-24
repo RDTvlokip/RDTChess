@@ -3,6 +3,7 @@
     python play.py                  # you are White, opens http://localhost:8000
     python play.py --black          # you are Black
     python play.py --port 8080
+    python play.py --model RDTChess2.pt   # or RDTChess.pt (default: RDTChess3.pt)
 
 The page has three modes -- play the model, play the minimax, or watch the two
 of them -- and a slider for the minimax depth. No build step, no CDN: the board
@@ -10,12 +11,25 @@ is served by the standard library and the model stays in Python.
 """
 
 import argparse
+import os
+
+import torch
 
 from algo_player import AlgoPlayer
 from gui import serve
 from player import ModelPlayer
 
-CHECKPOINT = "RDTChess.pt"
+CHECKPOINT = "RDTChess3.pt"
+
+
+def load_player(path: str, device: str, finish_plies: int):
+    """RDTChess3 checkpoints carry the look-ahead module g, so they load the
+    imagination player; RDTChess2 and RDTChess load the plain policy player."""
+    checkpoint = torch.load(path, map_location="cpu") if os.path.isfile(path) else {}
+    if "imagination" in checkpoint:
+        from imagination import ImaginationPlayer
+        return ImaginationPlayer(path, device=device, finish_plies=finish_plies), "RDTChess3 (imagines when unsure)"
+    return ModelPlayer(path, device=device, finish_plies=finish_plies), os.path.splitext(os.path.basename(path))[0]
 
 
 def main() -> int:
@@ -29,8 +43,7 @@ def main() -> int:
                         help="disable the one-ply terminal check (weaker, purer)")
     args = parser.parse_args()
 
-    model = ModelPlayer(args.model, device=args.device,
-                        finish_plies=0 if args.raw_policy else 1)
+    model, label = load_player(args.model, args.device, 0 if args.raw_policy else 1)
     print(f"loaded {args.model} on {model.device}")
 
     # Both modes and the depth slider live in the page, so hand over the model
@@ -38,7 +51,7 @@ def main() -> int:
     return serve(
         model,
         lambda depth: AlgoPlayer(depth=depth),
-        model_label="5.5M-game policy",
+        model_label=label,
         human_is_white=not args.black,
         port=args.port,
         depth=args.depth,
