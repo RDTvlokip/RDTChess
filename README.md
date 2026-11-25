@@ -129,7 +129,7 @@ RDTChess3 is above RDTChess2 in all nine matches (pooled paired gap +11.8 [+9.9,
 | RDTChess2 | 49.10 | 53.16 | 53.98 | **52.08** [51.49, 52.65] |
 | **RDTChess3** | 45.21 | 49.84 | 52.18 | 49.08 [48.49, 49.68] |
 
-RDTChess2, which has no rating input and was trained only on players rated 1800 or more, is 1.45 points below Maia-2 [−1.76, −1.10], and close to it at 2000 and above (−0.18, only 123 games in that group). RDTChess3 is 3.00 points below RDTChess2, as on our own human positions. The released Maia-2 model gives 53.53 %, 0.28 points above the 53.25 % of its paper; we do not know why. Details in the [technical report](https://doi.org/10.5281/zenodo.24295059).
+RDTChess2, which has no rating input and was trained only on players rated 1800 or more, is 1.45 points below Maia-2 [−1.76, −1.10], and close to it at 2000 and above (−0.18, only 123 games in that group). RDTChess3 is 3.00 points below RDTChess2, as on our own human positions. The released Maia-2 model gives 53.53 %, 0.28 points above the 53.25 % of its paper: the Maia team confirmed that the released checkpoint was trained for one more epoch than the paper's. Details in the [technical report](https://doi.org/10.5281/zenodo.24295059).
 
 > 🚫 **No absolute Elo is claimed.** "≈ +100 Elo" is a difference against RDTChess2, from paired duels. Re-reading the *real* resulting positions with the same rule is still stronger (73.35 % against RDTChess2): the imagination captures a little under half (45 % [33, 57]) of that gain.
 
@@ -574,8 +574,8 @@ For RDTChess3 (the look-ahead module and the self-distillation), please cite the
   institution = {Independent research},
   year        = {2026},
   month       = nov,
-  doi         = {10.5281/zenodo.24541970},
-  url         = {https://doi.org/10.5281/zenodo.24541970}
+  doi         = {10.5281/zenodo.24544470},
+  url         = {https://doi.org/10.5281/zenodo.24544470}
 }
 ```
 
