@@ -2,18 +2,18 @@
 
 ![RDTChess3 — it imagines before it plays: the white arrow is the move it imagines (Bf2, which saves the game), the crossed-out pink arrow the instinct move (Ng4, which loses)](thumbnail.png)
 
-**RDTChess3** is RDTChess2 (**11.05M** parameters, recurrent depth ×2, gated memory, SE) after a short self-distillation, plus a **3.84M-parameter look-ahead module *g*** that predicts the network's own latent state *after* a move, without playing the move on a board. When the policy hesitates (top move under 60 %), it **imagines its three best moves** and lets its own value head judge them. **No tree search, no engine labels, human games only.** ≈ **+100 Elo over RDTChess2** (63.96 % on 4,000 openings kept untouched until the model was fixed). Live on the [Lichess bot](https://lichess.org/@/RDTChessBot). Full report: [doi.org/10.5281/zenodo.24295060](https://doi.org/10.5281/zenodo.24295060).
+**RDTChess3** is RDTChess2 (**11.05M** parameters, recurrent depth ×2, gated memory, SE) after a short self-distillation, plus a **3.84M-parameter look-ahead module *g*** that predicts the network's own latent state *after* a move, without playing the move on a board. When the policy hesitates (top move under 60 %), it **imagines its three best moves** and lets its own value head judge them. **No tree search, no engine labels, human games only.** ≈ **+100 Elo over RDTChess2** (63.96 % on 4,000 openings kept untouched until the model was fixed). Live on the [Lichess bot](https://lichess.org/@/RDTChessBot). Full report: [doi.org/10.5281/zenodo.24295059](https://doi.org/10.5281/zenodo.24295059).
 
 [![Play on Lichess](https://img.shields.io/badge/play%20it%20on-Lichess-0CA678?style=flat-square&logo=lichess&logoColor=white)](https://lichess.org/@/RDTChessBot)
 [![Weights on Hugging Face](https://img.shields.io/badge/weights-Hugging%20Face-ffcc4d?style=flat-square&logo=huggingface&logoColor=black)](https://huggingface.co/RDTvlokip/RDTChess)
-[![Report](https://img.shields.io/badge/report-10.5281%2Fzenodo.24295060-1f2937?style=flat-square)](https://doi.org/10.5281/zenodo.24295060)
+[![Report](https://img.shields.io/badge/report-10.5281%2Fzenodo.24295059-1f2937?style=flat-square)](https://doi.org/10.5281/zenodo.24295059)
 ![license](https://img.shields.io/badge/license-Apache--2.0-4C6EF5?style=flat-square)
 ![params](https://img.shields.io/badge/params-14.9M%20(11.05M%20%2B%203.84M)-4C6EF5?style=flat-square)
 ![games](https://img.shields.io/badge/human%20games-~11M-4C6EF5?style=flat-square)
 ![search](https://img.shields.io/badge/search-none-495057?style=flat-square)
 ![PyTorch](https://img.shields.io/badge/PyTorch-ee4c2c?style=flat-square&logo=pytorch&logoColor=white)
 
-> ⚠️ **One network, one training run.** Every RDTChess3 number below comes from a single network and a single training run; the comparisons are paired and their intervals are over openings, not over training seeds. The full protocol, every control and every limit are in the [technical report](https://doi.org/10.5281/zenodo.24295060).
+> ⚠️ **One network, one training run.** Every RDTChess3 number below comes from a single network and a single training run; the comparisons are paired and their intervals are over openings, not over training seeds. The full protocol, every control and every limit are in the [technical report](https://doi.org/10.5281/zenodo.24295059).
 
 This repository holds the **inference code**. The weights live on [Hugging Face](https://huggingface.co/RDTvlokip/RDTChess) — **three** checkpoints: `RDTChess3.pt` (this page's main subject, live on Lichess), `RDTChess2.pt`, its base, described in [📎 RDTChess2](#rdtchess2), and `RDTChess.pt`, the original plain network, in [📎 RDTChess (original)](#rdtchess).
 
@@ -118,6 +118,18 @@ RDTChess3 is above RDTChess2 in all nine matches (pooled paired gap +11.8 [+9.9,
 | Maia-3 (23M) | 93.0 | 64.0 | 17.6 | 59.16 | 57.40 |
 
 **It plays stronger and less like a human:** when it hesitates, it now picks what wins more often, not what a human would play.
+
+**On the exact Maia-2 paper test set** (106,740 positions of rapid games, in the three rating groups of the Maia-2 paper; mean of the three groups, 95 % interval over games). We asked the Maia team (CSSLab, University of Toronto) how this test set was built; they confirmed the test set and the protocol, and agreed that we report these numbers.
+
+| Player | < 1600 | 1600–1999 | ≥ 2000 | Mean |
+|---|:-:|:-:|:-:|:-:|
+| Maia-3 (23M) | 55.30 | 58.39 | 60.90 | 58.20 [57.67, 58.72] |
+| Maia-2 (rapid) | 51.97 | 54.44 | 54.16 | 53.53 [52.96, 54.08] |
+| Maia-1 | 51.64 | 52.88 | 53.42 | 52.64 [52.15, 53.13] |
+| RDTChess2 | 49.10 | 53.16 | 53.98 | **52.08** [51.49, 52.65] |
+| **RDTChess3** | 45.21 | 49.84 | 52.18 | 49.08 [48.49, 49.68] |
+
+RDTChess2, which has no rating input and was trained only on players rated 1800 or more, is 1.45 points below Maia-2 [−1.76, −1.10], and close to it at 2000 and above (−0.18, only 123 games in that group). RDTChess3 is 3.00 points below RDTChess2, as on our own human positions. The released Maia-2 model gives 53.53 %, 0.28 points above the 53.25 % of its paper; we do not know why. Details in the [technical report](https://doi.org/10.5281/zenodo.24295059).
 
 > 🚫 **No absolute Elo is claimed.** "≈ +100 Elo" is a difference against RDTChess2, from paired duels. Re-reading the *real* resulting positions with the same rule is still stronger (73.35 % against RDTChess2): the imagination captures a little under half (45 % [33, 57]) of that gain.
 
@@ -391,7 +403,7 @@ checkpoint's filename — the examples below use `RDTChess2.pt`, and every one o
 them works identically on `RDTChess.pt`. They measure the **network alone** (one
 forward pass); on `RDTChess3.pt` they measure its network without the
 imagination. The RDTChess3 player itself is measured in the
-[report](https://doi.org/10.5281/zenodo.24295060).
+[report](https://doi.org/10.5281/zenodo.24295059).
 
 ### The puzzle grid
 
@@ -562,8 +574,8 @@ For RDTChess3 (the look-ahead module and the self-distillation), please cite the
   institution = {Independent research},
   year        = {2026},
   month       = nov,
-  doi         = {10.5281/zenodo.24295060},
-  url         = {https://doi.org/10.5281/zenodo.24295060}
+  doi         = {10.5281/zenodo.24541970},
+  url         = {https://doi.org/10.5281/zenodo.24541970}
 }
 ```
 
